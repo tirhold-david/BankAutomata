@@ -1,48 +1,45 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class BanknoteStorage {
-    private int[] denominations; //címletek
-    private int[] counts;        //darabszám
+    private List<Banknotes> banknotes;
 
     public BanknoteStorage() {
-        this.denominations = new int[]{20000, 10000, 5000, 2000, 1000};
-        this.counts = new int[]{10, 10, 10, 10, 10};
-    }
-
-    public int[] getDenominations() {
-        return denominations.clone();
-    }
-
-    public int[] getCounts() {
-        return counts.clone();
-    }
-
-    public int getCountForDenomination(int denomination) {
-        for (int i = 0; i < denominations.length; i++) {
-            if (denominations[i] == denomination) {
-                return counts[i];
-            }
-        }
-        return -1; //nem található címlet
+        banknotes = new ArrayList<>();
+        banknotes.add(new Banknotes(20000, 10));
+        banknotes.add(new Banknotes(10000, 10));
+        banknotes.add(new Banknotes(5000, 10));
+        banknotes.add(new Banknotes(2000, 10));
+        banknotes.add(new Banknotes(1000, 10));
     }
 
     public void printStorageStatus() {
         System.out.println("Bankjegy készlet:");
-        for (int i = 0; i < denominations.length; i++) {
-            System.out.println(denominations[i] + " Ft: " + counts[i] + " db");
+        for (Banknotes b : banknotes) {
+            System.out.println(b);
         }
     }
 
-    public boolean addBanknotes(int denomination, int amount) {
-        // 1. Validáljuk a címletet
-        for (int i = 0; i < denominations.length; i++) {
-            if (denominations[i] == denomination) {
-                // 2. Validáljuk a mennyiséget
-                if (amount > 0) {
-                    // 3. Növeljük a készletet
-                    counts[i] += amount;
-                    return true; // sikeres
-                }
+    public int getCountForDenomination(int denomination) {
+        for (Banknotes b : banknotes) {
+            if (b.getDenomination() == denomination) {
+                return b.getCount();
             }
         }
-        return false; // sikertelen
+        return -1;
+    }
+
+    public boolean addBanknotes(int denomination, int amount) {
+        for (Banknotes b : banknotes) {
+            if (b.getDenomination() == denomination) {
+                b.addCount(amount);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Banknotes> getBanknotes() {
+        return new ArrayList<>(banknotes);
     }
 }
