@@ -1,8 +1,10 @@
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.StringTokenizer;
 
 public class BanknoteStorage {
@@ -70,15 +72,14 @@ public class BanknoteStorage {
 
     // Bankjegyek hozzáadása
     public boolean addBanknotes(int denomination, int amount) {
-        if (amount <= 0) return false;
-        for (Banknotes note : notes) {
-            if (note.getDenomination() == denomination) {
-                note.addCount(amount);
-                return true;
+        if (amount > 0) {
+            for (Banknotes note : notes) {
+                if (note.getDenomination() == denomination) {
+                    note.addCount(amount);
+                    return true;
+                }
             }
         }
-        // ha nincs ilyen címlet, hozzá is adhatjuk újként
-        notes.add(new Banknotes(denomination, amount));
-        return true;
+        return false;
     }
 }
