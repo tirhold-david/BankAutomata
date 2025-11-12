@@ -1,17 +1,21 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class BanknoteStorage {
-    private int[] denominations; //címletek
-    private int[] counts;        //darabszám
+    private ArrayList<Banknotes> notes = new ArrayList<>();
 
     public BanknoteStorage() throws FileNotFoundException {
         try {
             BufferedReader reader = new BufferedReader(new FileReader("NoteSave.txt"));
 
             for (String line : reader.lines().toList()) {
+                StringTokenizer tokenizer = new StringTokenizer(line, ";");
 
+                Banknotes note = new Banknotes(Integer.parseInt(tokenizer.nextToken()), Integer.parseInt(tokenizer.nextToken()));
+                notes.add(note);
             }
         } catch (FileNotFoundException e) {
             System.out.println("A fájl nem található! Hiba: " + e.getMessage());
