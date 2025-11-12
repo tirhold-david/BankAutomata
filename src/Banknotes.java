@@ -15,6 +15,10 @@ public class Banknotes {
         return count;
     }
 
+    public void setCount(int count) {
+        this.count = count;
+    }
+
     public void addCount(int amount) {
         if (amount > 0) {
             this.count += amount;

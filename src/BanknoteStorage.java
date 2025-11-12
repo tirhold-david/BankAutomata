@@ -1,63 +1,84 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 public class BanknoteStorage {
     private ArrayList<Banknotes> notes = new ArrayList<>();
 
-    public BanknoteStorage() throws FileNotFoundException {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("NoteSave.txt"));
-
-            for (String line : reader.lines().toList()) {
+    public BanknoteStorage() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("NoteSave.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
                 StringTokenizer tokenizer = new StringTokenizer(line, ";");
-
-                Banknotes note = new Banknotes(Integer.parseInt(tokenizer.nextToken()), Integer.parseInt(tokenizer.nextToken()));
-                notes.add(note);
+                if (tokenizer.countTokens() == 2) {
+                    try {
+                        int denomination = Integer.parseInt(tokenizer.nextToken().trim());
+                        int count = Integer.parseInt(tokenizer.nextToken().trim());
+                        notes.add(new Banknotes(denomination, count));
+                    } catch (NumberFormatException e) {
+                        System.out.println("Hibás adat a sorban: " + line);
+                    }
+                } else {
+                    System.out.println("Hibás formátum: " + line);
+                }
             }
         } catch (FileNotFoundException e) {
             System.out.println("A fájl nem található! Hiba: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Hiba a fájl olvasása közben: " + e.getMessage());
         }
     }
 
+    // Visszaadja a címleteket int[] formában
     public int[] getDenominations() {
-        return denominations.clone();
+        int[] result = new int[notes.size()];
+        for (int i = 0; i < notes.size(); i++) {
+            result[i] = notes.get(i).getDenomination();
+        }
+        return result;
     }
 
+    // Visszaadja a darabszámokat int[] formában
     public int[] getCounts() {
-        return counts.clone();
+        int[] result = new int[notes.size()];
+        for (int i = 0; i < notes.size(); i++) {
+            result[i] = notes.get(i).getCount();
+        }
+        return result;
     }
 
+    // Adott címlethez tartozó darabszám lekérdezése
     public int getCountForDenomination(int denomination) {
-        for (int i = 0; i < denominations.length; i++) {
-            if (denominations[i] == denomination) {
-                return counts[i];
+        for (Banknotes note : notes) {
+            if (note.getDenomination() == denomination) {
+                return note.getCount();
             }
         }
-        return -1; //nem található címlet
+        return -1; // nem található
     }
 
+    // Készlet kiíratása
     public void printStorageStatus() {
         System.out.println("Bankjegy készlet:");
-        for (int i = 0; i < denominations.length; i++) {
-            System.out.println(denominations[i] + " Ft: " + counts[i] + " db");
+        for (Banknotes note : notes) {
+            System.out.println(note);
         }
     }
 
+    // Bankjegyek hozzáadása
     public boolean addBanknotes(int denomination, int amount) {
-        // 1. Validáljuk a címletet
-        for (int i = 0; i < denominations.length; i++) {
-            if (denominations[i] == denomination) {
-                // 2. Validáljuk a mennyiséget
-                if (amount > 0) {
-                    // 3. Növeljük a készletet
-                    counts[i] += amount;
-                    return true; // sikeres
-                }
+        if (amount <= 0) return false;
+        for (Banknotes note : notes) {
+            if (note.getDenomination() == denomination) {
+                note.addCount(amount);
+                return true;
             }
         }
-        return false; // sikertelen
+        // ha nincs ilyen címlet, hozzá is adhatjuk újként
+        notes.add(new Banknotes(denomination, amount));
+        return true;
     }
 }
