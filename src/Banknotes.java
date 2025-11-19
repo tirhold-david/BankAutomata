@@ -19,19 +19,21 @@ public class Banknotes {
         this.count = count;
     }
 
-    public void changeCount(int amount) {
+    public void changeCount(int amount) throws WrongAmountException {
         if (amount > 0) {
             if (amount + getCount() <= 100) {
                 setCount(getCount() + amount);
             } else {
-                // exception
+                throw new WrongAmountException("Az össz érték maximum 100 lehet!");
             }
         } else if (amount < 0) {
             if (getCount() - amount >= 0) {
                 setCount(getCount() - amount);
             } else {
-                // exception
+                throw new WrongAmountException("Az össz érték minimum 0 lehet!");
             }
+        } else {
+            throw new WrongAmountException("Az érték nem lehet 0!");
         }
     }
 

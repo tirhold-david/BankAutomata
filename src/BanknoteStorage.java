@@ -72,11 +72,15 @@ public class BanknoteStorage {
     }
 
     // Bankjegyek hozzáadása
-    public boolean addBanknotes(int denomination, int amount) {
+    public boolean addBanknotes(int denomination, int amount) throws WrongAmountException {
         if (amount > 0) {
             for (Banknotes note : notes) {
                 if (note.getDenomination() == denomination) {
-                    note.changeCount(amount);
+                    try {
+                        note.changeCount(amount);
+                    } catch (WrongAmountException e) {
+                        throw new WrongAmountException(e.getMessage());
+                    }
                     return true;
                 }
             }
