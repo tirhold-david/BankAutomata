@@ -22,6 +22,7 @@ public class BanknoteStorage {
                         notes.add(new Banknotes(denomination, count));
                     } catch (NumberFormatException e) {
                         System.out.println("Hibás adat a sorban: " + line);
+                        System.out.println("Hiba: " + e.getMessage());
                     }
                 } else {
                     System.out.println("Hibás formátum: " + line);
@@ -75,7 +76,7 @@ public class BanknoteStorage {
         if (amount > 0) {
             for (Banknotes note : notes) {
                 if (note.getDenomination() == denomination) {
-                    note.addCount(amount);
+                    note.changeCount(amount);
                     return true;
                 }
             }

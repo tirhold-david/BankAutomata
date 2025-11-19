@@ -19,15 +19,19 @@ public class Banknotes {
         this.count = count;
     }
 
-    public void addCount(int amount) {
+    public void changeCount(int amount) {
         if (amount > 0) {
-            this.count += amount;
-        }
-    }
-
-    public void removeCount(int amount) {
-        if (amount > 0 && amount <= count) {
-            this.count -= amount;
+            if (amount + getCount() <= 100) {
+                setCount(getCount() + amount);
+            } else {
+                // exception
+            }
+        } else if (amount < 0) {
+            if (getCount() - amount >= 0) {
+                setCount(getCount() - amount);
+            } else {
+                // exception
+            }
         }
     }
 
