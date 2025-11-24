@@ -1,10 +1,10 @@
-public class Banknotes {
+public class Banknotes implements iBankAutomata {
     private int denomination; // címlet
     private int count;        // darabszám
 
     public Banknotes(int denomination, int count) {
-        this.denomination = denomination;
-        this.count = count;
+        setDenomination(denomination);
+        setCount(count);
     }
 
     public int getDenomination() {
@@ -19,9 +19,13 @@ public class Banknotes {
         this.count = count;
     }
 
+    public void setDenomination(int denomination) {
+        this.denomination = denomination;
+    }
+
     public void changeCount(int amount) throws WrongAmountException {
         if (amount > 0) {
-            if (amount + getCount() <= 100) {
+            if (amount + getCount() <= MAX) {
                 setCount(getCount() + amount);
             } else {
                 throw new WrongAmountException("Az össz érték maximum 100 lehet!");
@@ -39,6 +43,8 @@ public class Banknotes {
 
     @Override
     public String toString() {
-        return denomination + " Ft: " + count + " db";
+        return getDenomination() + " Ft: " + getCount() + " db";
     }
+
+
 }

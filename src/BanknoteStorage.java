@@ -5,28 +5,20 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 
 public class BanknoteStorage {
-    private ArrayList<Banknotes> notes = new ArrayList<>();
+    private static ArrayList<Banknotes> notes = new ArrayList<>();
 
     public BanknoteStorage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("NoteSave.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 StringTokenizer tokenizer = new StringTokenizer(line, ";");
-                if (tokenizer.countTokens() == 2) {
-                    try {
-                        int denomination = Integer.parseInt(tokenizer.nextToken().trim());
-                        int count = Integer.parseInt(tokenizer.nextToken().trim());
-                        notes.add(new Banknotes(denomination, count));
-                    } catch (NumberFormatException e) {
-                        System.out.println("Hibás adat a sorban: " + line);
-                        System.out.println("Hiba: " + e.getMessage());
-                    }
-                } else {
-                    System.out.println("Hibás formátum: " + line);
-                }
+                int denomination = Integer.parseInt(tokenizer.nextToken().trim());
+                int count = Integer.parseInt(tokenizer.nextToken().trim());
+                notes.add(new Banknotes(denomination, count));
             }
         } catch (FileNotFoundException e) {
             System.out.println("A fájl nem található! Hiba: " + e.getMessage());
@@ -36,7 +28,7 @@ public class BanknoteStorage {
     }
 
     // Visszaadja a címleteket int[] formában
-    public int[] getDenominations() {
+    public static int[] getDenominations() {
         int[] result = new int[notes.size()];
         for (int i = 0; i < notes.size(); i++) {
             result[i] = notes.get(i).getDenomination();
@@ -45,7 +37,7 @@ public class BanknoteStorage {
     }
 
     // Visszaadja a darabszámokat int[] formában
-    public int[] getCounts() {
+    public static int[] getCounts() {
         int[] result = new int[notes.size()];
         for (int i = 0; i < notes.size(); i++) {
             result[i] = notes.get(i).getCount();
@@ -54,7 +46,7 @@ public class BanknoteStorage {
     }
 
     // Adott címlethez tartozó darabszám lekérdezése
-    public int getCountForDenomination(int denomination) {
+    public static int getCountForDenomination(int denomination) {
         for (Banknotes note : notes) {
             if (note.getDenomination() == denomination) {
                 return note.getCount();
@@ -64,7 +56,7 @@ public class BanknoteStorage {
     }
 
     // Készlet kiíratása
-    public void printStorageStatus() {
+    public static void printStorageStatus() {
         System.out.println("Bankjegy készlet:");
         for (Banknotes note : notes) {
             System.out.println(note);
@@ -72,19 +64,46 @@ public class BanknoteStorage {
     }
 
     // Bankjegyek hozzáadása
-    public boolean addBanknotes(int denomination, int amount) throws WrongAmountException {
-        if (amount > 0) {
-            for (Banknotes note : notes) {
-                if (note.getDenomination() == denomination) {
-                    try {
-                        note.changeCount(amount);
-                    } catch (WrongAmountException e) {
-                        throw new WrongAmountException(e.getMessage());
-                    }
-                    return true;
+    public static void changeBanknotesAmount(int denomination, int amount) throws WrongAmountException, InvalidDenominationException {
+        for (Banknotes note : notes) {
+            if (note.getDenomination() == denomination) {
+                try {
+                    note.changeCount(amount);
+                } catch (WrongAmountException wae) {
+                    throw new WrongAmountException(wae.getMessage());
                 }
             }
         }
-        return false;
+
+        throw new InvalidDenominationException("Nem létezik ilyen bankjegy!");
+    }
+
+    public static void welcome() {
+        System.out.println("\nÜdvözöllek a Tirhold ATM termináljánál!\n\nRendelkezésre álló műveletek:\n1. Pénzlevétel\n" +
+                "2. Admin mód\n3. Kilépés\n(A kiválasztott opció sorszámát írd be!)");
+        Scanner scanner = new Scanner(System.in);
+
+        int command = scanner.nextInt();
+
+        try {
+            switch (command) {
+                case 1:
+                    // felvétel
+                    break;
+                case 2:
+                    // admin
+                    break;
+                case 3:
+                    System.out.println("Viszont látásra!");
+                    scanner.close();
+                    break;
+                default:
+                    throw new InvalidInputException("Ilyen opció nem létezik!");
+            }
+        } catch (InvalidInputException iie) {
+            System.out.println("Hiba a bemenetben: " + iie.getMessage());
+            scanner.reset();
+            welcome();
+        }
     }
 }
