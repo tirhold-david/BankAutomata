@@ -31,8 +31,8 @@ public class Banknotes implements iBankAutomata {
                 throw new WrongAmountException("Az össz érték maximum 100 lehet!");
             }
         } else if (amount < 0) {
-            if (getCount() - amount >= 0) {
-                setCount(getCount() - amount);
+            if (getCount() + amount >= 0) {
+                setCount(getCount() + amount);
             } else {
                 throw new WrongAmountException("Az össz érték minimum 0 lehet!");
             }
