@@ -88,14 +88,13 @@ public class BanknoteStorage {
         try {
             switch (command) {
                 case 1:
-                    // felvétel
+                    withdraw();
                     break;
                 case 2:
                     // admin
                     break;
                 case 3:
                     System.out.println("Viszont látásra!");
-                    scanner.close();
                     break;
                 default:
                     throw new InvalidInputException("Ilyen opció nem létezik!");
@@ -105,5 +104,39 @@ public class BanknoteStorage {
             scanner.reset();
             welcome();
         }
+    }
+
+    public static void withdraw() throws InvalidInputException {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Írd be a kártyaszámot: ");
+
+        String cardNum = scanner.nextLine().trim();
+
+        try {
+            if (checkCardNumber(cardNum)) {
+                System.out.println("Helyes");
+            }
+        } catch (InvalidInputException iie) {
+            System.out.println(iie.getMessage());
+            withdraw();
+        }
+    }
+
+    private static boolean checkCardNumber(String cardNumber) throws InvalidInputException {
+        StringTokenizer tokenizer = new StringTokenizer(cardNumber, " ");
+
+        if (tokenizer.countTokens() != 4) {
+            throw new InvalidInputException("Hibás kártyaszám formátum! A kártyaszám 4x4 számjegy szóközzel elválasztva.");
+        } else {
+            while (tokenizer.hasMoreTokens()) {
+                String token = tokenizer.nextToken();
+                if (!token.matches("[0-9]{4}")) {
+                    throw new InvalidInputException("Hibás kártyaszám formátum! A kártyaszám 4x4 számjegy szóközzel elválasztva.");
+                }
+            }
+        }
+
+        return true;
     }
 }
