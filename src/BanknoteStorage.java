@@ -80,7 +80,7 @@ public class BanknoteStorage {
 
     public static void welcome() {
         System.out.println("\nÜdvözöllek a Tirhold ATM termináljánál!\n\nRendelkezésre álló műveletek:\n1. Pénzlevétel\n" +
-                "2. Admin mód\n3. Kilépés\n(A kiválasztott opció sorszámát írd be!)");
+                "2. Admin mód\n3. Kilépés\n(A kiválasztott opció számát írja be!)");
         Scanner scanner = new Scanner(System.in);
 
         int command = scanner.nextInt();
@@ -107,24 +107,39 @@ public class BanknoteStorage {
     }
 
     public static void withdraw() throws InvalidInputException {
+        int chance = 3;
+
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("Írd be a kártyaszámot: ");
-
-        String cardNum = scanner.nextLine().trim();
-
         try {
-            if (checkCardNumber(cardNum)) {
-                System.out.println("Helyes");
+
+            if (checkPin(checkCardNumber(scanner), scanner)) {
+
             }
+
         } catch (InvalidInputException iie) {
             System.out.println(iie.getMessage());
-            withdraw();
+            welcome();
+        } catch (WrongPinException wpe) {
+            System.out.println(wpe.getMessage());
+
+            if (chance > 0) {
+            }
+
+            welcome();
+        }
+        catch (NumberFormatException nfe) {
+            System.out.println("A kártyaszám és a PIN kód csak számokat tartalmazhat!");
+            welcome();
         }
     }
 
-    private static boolean checkCardNumber(String cardNumber) throws InvalidInputException {
-        StringTokenizer tokenizer = new StringTokenizer(cardNumber, " ");
+    private static String checkCardNumber(Scanner scanner) throws InvalidInputException {
+        System.out.print("Írja be a kártyaszámot: ");
+
+        String cardNum = scanner.nextLine().trim();
+
+        StringTokenizer tokenizer = new StringTokenizer(cardNum, " ");
 
         if (tokenizer.countTokens() != 4) {
             throw new InvalidInputException("Hibás kártyaszám formátum! A kártyaszám 4x4 számjegy szóközzel elválasztva.");
@@ -135,6 +150,21 @@ public class BanknoteStorage {
                     throw new InvalidInputException("Hibás kártyaszám formátum! A kártyaszám 4x4 számjegy szóközzel elválasztva.");
                 }
             }
+        }
+
+        return cardNum.split(" ")[0];
+    }
+
+    private static boolean checkPin(String cardNumber, Scanner scanner) throws WrongPinException {
+        System.out.print("Írja be a PIN kódot: ");
+
+        int pin = Integer.parseInt(scanner.nextLine().trim());
+
+        StringBuilder stringBuilder = new StringBuilder(cardNumber);
+        int reverseCard = Integer.parseInt(stringBuilder.reverse().toString());
+
+        if (reverseCard != pin) {
+            throw new WrongPinException("Hibás PIN kód!");
         }
 
         return true;
