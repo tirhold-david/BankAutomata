@@ -9,7 +9,7 @@ public class Main {
 //            System.out.println("Hiba a bankjeggyel: " + ide.getMessage());
 //        }
 
-        BanknoteStorage.welcome();
+        ATMManager.welcome();
 
 
     }
