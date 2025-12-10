@@ -1,11 +1,16 @@
 public class Card {
-    private int number;
+    private String cardNumber;
 
-    public Card(int number) {
-        this.number = number;
+    public Card(String cardNumber) {
+        this.cardNumber = cardNumber;
     }
 
-    public int getNumber() {
-        return number;
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    @Override
+    public String toString() {
+        return cardNumber;
     }
 }

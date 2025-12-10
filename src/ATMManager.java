@@ -10,6 +10,8 @@ public class ATMManager {
     private static ArrayList<Banknotes> notes = new ArrayList<>();
 
     public ATMManager() {
+        BlackListManager.load();
+
         try (BufferedReader reader = new BufferedReader(new FileReader("NoteSave.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -25,71 +27,24 @@ public class ATMManager {
         }
     }
 
-    // Visszaadja a címleteket int[] formában
-    public static int[] getDenominations() {
-        int[] result = new int[notes.size()];
-        for (int i = 0; i < notes.size(); i++) {
-            result[i] = notes.get(i).getDenomination();
-        }
-        return result;
-    }
-
-    // Visszaadja a darabszámokat int[] formában
-    public static int[] getCounts() {
-        int[] result = new int[notes.size()];
-        for (int i = 0; i < notes.size(); i++) {
-            result[i] = notes.get(i).getCount();
-        }
-        return result;
-    }
-
-    // Adott címlethez tartozó darabszám lekérdezése
-    public static int getCountForDenomination(int denomination) {
-        for (Banknotes note : notes) {
-            if (note.getDenomination() == denomination) {
-                return note.getCount();
-            }
-        }
-        return -1; // nem található
-    }
-
-    // Készlet kiíratása
-    public static void printStorageStatus() {
-        System.out.println("Bankjegy készlet:");
-        for (Banknotes note : notes) {
-            System.out.println(note);
-        }
-    }
-
-    // Bankjegyek hozzáadása
-    public static void changeBanknotesAmount(int denomination, int amount) throws WrongAmountException, InvalidDenominationException {
-        for (Banknotes note : notes) {
-            if (note.getDenomination() == denomination) {
-                try {
-                    note.changeCount(amount);
-                } catch (WrongAmountException wae) {
-                    throw new WrongAmountException(wae.getMessage());
-                }
-            }
-        }
-
-        throw new InvalidDenominationException("Nem létezik ilyen bankjegy!");
-    }
-
     public static void welcome() {
         System.out.println("\nÜdvözöllek a Tirhold ATM termináljánál!\n\nRendelkezésre álló műveletek:\n1. Pénzlevétel\n" +
                 "2. Admin mód\n3. Kilépés\n(A kiválasztott opció számát írja be!)");
+
         Scanner scanner = new Scanner(System.in);
 
-        int command = scanner.nextInt();
+        String input = scanner.nextLine().trim();
+        int command;
 
         try {
+            command = Integer.parseInt(input);
+
             switch (command) {
                 case 1:
                     withdraw();
                     break;
                 case 2:
-                    // admin
+                    // admin mód
                     break;
                 case 3:
                     System.out.println("Viszont látásra!");
@@ -97,21 +52,23 @@ public class ATMManager {
                 default:
                     throw new InvalidInputException("Ilyen opció nem létezik!");
             }
+        } catch (NumberFormatException e) {
+            System.out.println("Csak számot adjon meg!");
+            welcome();
         } catch (InvalidInputException iie) {
-            System.out.println("Hiba a bemenetben: " + iie.getMessage());
-            scanner.reset();
+            System.out.println(iie.getMessage());
             welcome();
         }
     }
 
-    public static void withdraw() throws InvalidInputException {
+    public static void withdraw() {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            if (checkPin(checkCardNumber(scanner), scanner)) {
-                System.out.println("Helyes");
-            } else {
-                throw new WrongPinException("\nHibás PIN kód! A kártyát a rendszer letiltotta!");
+            Card card = checkCardNumber(scanner);
+
+            if (checkPin(card, scanner)) {
+                System.out.println("Helyes PIN – belépés engedélyezve.");
             }
 
         } catch (InvalidInputException iie) {
@@ -119,59 +76,75 @@ public class ATMManager {
             welcome();
         } catch (WrongPinException wpe) {
             System.out.println(wpe.getMessage());
-            // blacklist
-        }
-        catch (NumberFormatException nfe) {
-            System.out.println("A kártyaszám és a PIN kód csak számokat tartalmazhat!");
+            welcome();
+        } catch (NumberFormatException nfe) {
+            System.out.println("A kártyaszám és a PIN csak számot tartalmazhat!");
             welcome();
         }
     }
 
-    private static String checkCardNumber(Scanner scanner) throws InvalidInputException {
-        System.out.print("Írja be a kártyaszámot: ");
-
+    private static Card checkCardNumber(Scanner scanner) throws InvalidInputException {
+        System.out.print("Írja be a kártyaszámot (XXXX XXXX XXXX XXXX): ");
         String cardNum = scanner.nextLine().trim();
+
+        if (cardNum.isEmpty()) {
+            throw new InvalidInputException("A kártyaszám nem lehet üres!");
+        }
 
         StringTokenizer tokenizer = new StringTokenizer(cardNum, " ");
 
         if (tokenizer.countTokens() != 4) {
-            throw new InvalidInputException("Hibás kártyaszám formátum! A kártyaszám 4x4 számjegy szóközzel elválasztva.");
-        } else {
-            while (tokenizer.hasMoreTokens()) {
-                String token = tokenizer.nextToken();
-                if (!token.matches("[0-9]{4}")) {
-                    throw new InvalidInputException("Hibás kártyaszám formátum! A kártyaszám 4x4 számjegy szóközzel elválasztva.");
-                }
-            }
+            throw new InvalidInputException("A kártyaszám formátuma hibás: XXXX XXXX XXXX XXXX");
         }
 
-        return cardNum.split(" ")[0];
+        StringBuilder full = new StringBuilder();
+
+        while (tokenizer.hasMoreTokens()) {
+            String token = tokenizer.nextToken();
+            if (!token.matches("[0-9]{4}")) {
+                throw new InvalidInputException("A kártyaszám csak számokat tartalmazhat!");
+            }
+            full.append(token);
+        }
+
+        Card card = new Card(full.toString());
+
+        if (BlackListManager.isBlacklisted(card)) {
+            throw new InvalidInputException("Ez a kártya tiltva van!");
+        }
+
+        return card;
     }
 
-    private static boolean checkPin(String cardNumber, Scanner scanner) throws WrongPinException {
+    private static boolean checkPin(Card card, Scanner scanner) throws WrongPinException {
         int chances = 3;
-        int pin, reverseCard;
 
-        do {
-            try {
-                if (chances < 3) {
-                    throw new WrongPinException("Hibás PIN kód!");
-                }
-            } catch (WrongPinException wpi) {
-                System.out.println(wpi.getMessage());
+        String reversedCard = new StringBuilder(card.getCardNumber()).reverse().toString();
+
+        while (chances > 0) {
+
+            if (chances < 3) {
+                System.out.println("Hibás PIN kód!");
+            }
+
+            System.out.print("Írja be a PIN kódot: ");
+            String pin = scanner.nextLine().trim();
+
+            // PIN csak szám
+            if (!pin.matches("[0-9]+")) {
+                throw new WrongPinException("A PIN csak számjegyeket tartalmazhat!");
+            }
+
+            if (pin.equals(reversedCard)) {
+                return true;
             }
 
             chances--;
+        }
 
-            System.out.print("Írja be a PIN kódot: ");
-
-            pin = Integer.parseInt(scanner.nextLine().trim());
-
-            StringBuilder stringBuilder = new StringBuilder(cardNumber);
-            reverseCard = Integer.parseInt(stringBuilder.reverse().toString());
-
-        } while (chances > 0 && reverseCard != pin);
-
-        return reverseCard == pin;
+        // Ha idáig eljutunk, mindhárom próbálkozás rossz volt
+        BlackListManager.addCard(card);
+        throw new WrongPinException("Hibás PIN! A kártyát letiltottuk!");
     }
+
 }
