@@ -68,7 +68,8 @@ public class ATMManager {
             Card card = checkCardNumber(scanner);
 
             if (checkPin(card, scanner)) {
-                System.out.println("Helyes PIN – belépés engedélyezve.");
+                System.out.println("Mennyi pénzt szeretne felvenni?");
+                dispenseCash(scanner.nextInt());
             }
 
         } catch (InvalidInputException iie) {
@@ -79,6 +80,9 @@ public class ATMManager {
             welcome();
         } catch (NumberFormatException nfe) {
             System.out.println("A kártyaszám és a PIN csak számot tartalmazhat!");
+            welcome();
+        } catch (WrongAmountException wae) {
+            System.out.println(wae.getMessage());
             welcome();
         }
     }
@@ -119,7 +123,7 @@ public class ATMManager {
     private static boolean checkPin(Card card, Scanner scanner) throws WrongPinException {
         int chances = 3;
 
-        String reversedCard = new StringBuilder(card.getCardNumber()).reverse().toString();
+        String reversedCard = new StringBuilder(card.getCardNumber().substring(0, 4)).reverse().toString();
 
         while (chances > 0) {
 
@@ -130,7 +134,6 @@ public class ATMManager {
             System.out.print("Írja be a PIN kódot: ");
             String pin = scanner.nextLine().trim();
 
-            // PIN csak szám
             if (!pin.matches("[0-9]+")) {
                 throw new WrongPinException("A PIN csak számjegyeket tartalmazhat!");
             }
@@ -142,9 +145,65 @@ public class ATMManager {
             chances--;
         }
 
-        // Ha idáig eljutunk, mindhárom próbálkozás rossz volt
         BlackListManager.addCard(card);
         throw new WrongPinException("Hibás PIN! A kártyát letiltottuk!");
     }
+
+    private static void dispenseCash(int amount) throws WrongAmountException, InvalidInputException {
+        int remaining = amount;
+
+        ArrayList<Integer> used = new ArrayList<>();
+
+        for (Banknotes note : notes) {
+            int denom = note.getDenomination();
+            int available = note.getCount();
+
+            int needed = remaining / denom;
+            int usedCount = Math.min(needed, available);
+
+            remaining -= usedCount * denom;
+            used.add(usedCount);
+        }
+
+        if (remaining != 0) {
+            throw new WrongAmountException(
+                    "Az összeg nem adható ki a rendelkezésre álló bankjegyekkel!"
+            );
+        }
+
+        for (int i = 0; i < notes.size(); i++) {
+            try {
+                notes.get(i).changeCount(-used.get(i));
+            } catch (WrongAmountException e) {
+                throw new WrongAmountException("Hiba a bankjegykezelés során!");
+            }
+        }
+
+        saveNotesToFile();
+
+        System.out.println("Kiadott bankjegyek:");
+        for (int i = 0; i < notes.size(); i++) {
+            if (used.get(i) > 0) {
+                System.out.println(
+                        notes.get(i).getDenomination() + " Ft: " + used.get(i) + " db"
+                );
+            }
+        }
+    }
+
+
+    private static void saveNotesToFile() throws InvalidInputException {
+        try (java.io.PrintWriter writer =
+                     new java.io.PrintWriter(new java.io.FileWriter("NoteSave.txt"))) {
+
+            for (Banknotes note : notes) {
+                writer.println(note.getDenomination() + ";" + note.getCount());
+            }
+
+        } catch (IOException e) {
+            throw new InvalidInputException("Nem sikerült menteni a bankjegyeket fájlba!");
+        }
+    }
+
 
 }
