@@ -36,8 +36,6 @@ public class Banknotes implements iBankAutomata {
             } else {
                 throw new WrongAmountException("Az össz érték minimum 0 lehet!");
             }
-        } else {
-            throw new WrongAmountException("Az érték nem lehet 0!");
         }
     }
 
