@@ -106,17 +106,14 @@ public class ATMManager {
             throw new InvalidInputException("A kártyaszám formátuma hibás: XXXX XXXX XXXX XXXX");
         }
 
-        StringBuilder full = new StringBuilder();
-
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
             if (!token.matches("[0-9]{4}")) {
                 throw new InvalidInputException("A kártyaszám csak számokat tartalmazhat!");
             }
-            full.append(token);
         }
 
-        Card card = new Card(full.toString());
+        Card card = new Card(cardNum);
 
         if (BlackListManager.isBlacklisted(card)) {
             throw new InvalidInputException("Ez a kártya tiltva van!");

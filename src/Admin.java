@@ -1,10 +1,12 @@
 import java.util.Scanner;
 
 public class Admin implements iBankAutomata {
+    private static final Scanner scanner = ATMManager.getScanner();
+
 
     public static void adminMode() {
         System.out.print("Admin jelszó: ");
-        String password = ATMManager.getScanner().nextLine().trim();
+        String password = scanner.nextLine().trim();
 
         if (PASSWORD.equals(password)) {
             System.out.println("\n✓ Sikeres admin belépés!");
@@ -17,7 +19,6 @@ public class Admin implements iBankAutomata {
     private static void adminMenu() {
         System.out.println("\nAdmin menü:\n1. Bankjegy készlet megtekintése\n2. Bankjegy feltöltése\n3. Kártya feloldása feketelistáról\n4. Vissza a főmenühöz");
 
-        Scanner scanner = ATMManager.getScanner();
         try {
             int choice = Integer.parseInt(scanner.nextLine().trim());
 
@@ -31,9 +32,11 @@ public class Admin implements iBankAutomata {
                     adminMenu();
                     break;
                 case 3:
-                    // kártya feloldás
+                    unlockCard();
+                    adminMenu();
                     break;
                 case 4:
+                    ATMManager.welcome();
                     break;
                 default:
                     throw new InvalidInputException("Ilyen opció nem létezik!");
@@ -74,4 +77,29 @@ public class Admin implements iBankAutomata {
             System.out.println(iie.getMessage());
         }
     }
+
+    private static void unlockCard() {
+        System.out.print("\nFeloldani kívánt számlaszám: ");
+        String cardNumber = scanner.nextLine().trim();
+
+        Card card = new Card(cardNumber);
+
+        try {
+            if (!cardNumber.matches("\\w{4} \\w{4} \\w{4} \\w{4}")) {
+                throw new InvalidInputException("Hibás kártyaszám formátum!");
+            }
+
+            if (!BlackListManager.isBlacklisted(card)) {
+                throw new InvalidInputException("Ez a kártya nincs a feketelistán!");
+            }
+        } catch (InvalidInputException iie) {
+            System.out.println(iie.getMessage());
+            adminMenu();
+        }
+
+        BlackListManager.removeCard(card);
+
+        System.out.println("A kártya sikeresen feloldva!");
+    }
+
 }

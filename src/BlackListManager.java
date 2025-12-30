@@ -1,14 +1,13 @@
 import java.io.*;
 import java.util.HashSet;
 
-public class BlackListManager {
-    private static final String FILE_NAME = "BlackList.txt";
+public class BlackListManager implements iBankAutomata {
     private static HashSet<String> blacklistedCards = new HashSet<>();
 
     // Feketelista beolvasása
     public static void load() {
         blacklistedCards.clear();
-        try (BufferedReader br = new BufferedReader(new FileReader(FILE_NAME))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(BLACKLIST_TXT))) {
             String line;
             while ((line = br.readLine()) != null) {
                 blacklistedCards.add(line.trim());
@@ -22,7 +21,7 @@ public class BlackListManager {
 
     // Mentés fájlba
     public static void save() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(BLACKLIST_TXT))) {
             for (String card : blacklistedCards) {
                 bw.write(card);
                 bw.newLine();
