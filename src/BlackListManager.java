@@ -38,6 +38,12 @@ public class BlackListManager {
         save();
     }
 
+    // Kártya eltávolítás feketelistáról
+    public static void removeCard(Card card) {
+        blacklistedCards.remove(card.getCardNumber());
+        save();
+    }
+
     // Ellenőrzés
     public static boolean isBlacklisted(Card card) {
         return blacklistedCards.contains(card.getCardNumber());

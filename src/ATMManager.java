@@ -8,9 +8,11 @@ import java.util.StringTokenizer;
 
 public class ATMManager {
 
+    private static Scanner scanner;
     private static ArrayList<Banknotes> notes = new ArrayList<>();
 
     public static void init() {
+        scanner = new Scanner(System.in);
         BlackListManager.load();
 
         try (BufferedReader reader = new BufferedReader(new FileReader("NoteSave.txt"))) {
@@ -32,8 +34,6 @@ public class ATMManager {
         System.out.println("\nÜdvözöllek a Tirhold ATM termináljánál!\n\nRendelkezésre álló műveletek:\n1. Pénzlevétel\n" +
                 "2. Admin mód\n3. Kilépés\n(A kiválasztott opció számát írja be!)");
 
-        Scanner scanner = new Scanner(System.in);
-
         String input = scanner.nextLine().trim();
         int command;
 
@@ -43,12 +43,16 @@ public class ATMManager {
             switch (command) {
                 case 1:
                     withdraw();
+                    welcome();
                     break;
                 case 2:
-                    // admin mód
+                    Admin.adminMode();
+                    welcome();
                     break;
                 case 3:
                     System.out.println("Viszont látásra!");
+                    scanner.close();
+                    System.exit(0);
                     break;
                 default:
                     throw new InvalidInputException("Ilyen opció nem létezik!");
@@ -63,27 +67,27 @@ public class ATMManager {
     }
 
     public static void withdraw() {
-        Scanner scanner = new Scanner(System.in);
-
         try {
             Card card = checkCardNumber(scanner);
 
             if (checkPin(card, scanner)) {
                 System.out.println("Mennyi pénzt szeretne felvenni?");
-                dispenseCash(scanner.nextInt());
+                int amount = scanner.nextInt();
+                scanner.nextLine(); // Fogyasztja a maradék sort
+                dispenseCash(amount);
+                welcome();
             }
-
         } catch (InvalidInputException iie) {
             System.out.println(iie.getMessage());
             welcome();
         } catch (WrongPinException wpe) {
             System.out.println(wpe.getMessage());
             welcome();
-        } catch (NumberFormatException nfe) {
-            System.out.println("A kártyaszám és a PIN csak számot tartalmazhat!");
-            welcome();
         } catch (WrongAmountException wae) {
             System.out.println(wae.getMessage());
+            welcome();
+        } catch (NumberFormatException nfe) {
+            System.out.println("Csak számot adjon meg!");
             welcome();
         }
     }
@@ -130,7 +134,6 @@ public class ATMManager {
                         .toString();
 
         while (chances > 0) {
-
             if (chances < 3) {
                 System.out.println("Hibás PIN kód!");
             }
@@ -167,12 +170,10 @@ public class ATMManager {
         int remaining = amount;
         ArrayList<Integer> used = new ArrayList<>();
 
-        // Inicializáljuk a used listát a notes méretével
         for (int i = 0; i < notes.size(); i++) {
             used.add(0);
         }
 
-        // Greedy algoritmus: legnagyobb címlettől kezdve
         for (int i = 0; i < notes.size(); i++) {
             Banknotes note = notes.get(i);
             int denom = note.getDenomination();
@@ -194,12 +195,10 @@ public class ATMManager {
             );
         }
 
-        // Frissítjük a készletet
         for (int i = 0; i < notes.size(); i++) {
             notes.get(i).changeCount(-used.get(i));
         }
 
-        // Ellenőrizzük, hogy van-e negatív készlet
         for (Banknotes note : notes) {
             if (note.getCount() < 0) {
                 throw new WrongAmountException("Nincs elég " + note.getDenomination() + " Ft-os bankjegy!");
@@ -223,8 +222,7 @@ public class ATMManager {
         System.out.println("\n");
     }
 
-
-    private static void saveNotesToFile() throws InvalidInputException {
+    public static void saveNotesToFile() throws InvalidInputException {
         try (java.io.PrintWriter writer =
                      new java.io.PrintWriter(new java.io.FileWriter("NoteSave.txt"))) {
 
@@ -235,5 +233,13 @@ public class ATMManager {
         } catch (IOException e) {
             throw new InvalidInputException("Nem sikerült menteni a bankjegyeket fájlba!");
         }
+    }
+
+    public static ArrayList<Banknotes> getNotes() {
+        return notes;
+    }
+
+    public static Scanner getScanner() {
+        return scanner;
     }
 }
