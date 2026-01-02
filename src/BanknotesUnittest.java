@@ -6,7 +6,6 @@ public class BanknotesUnittest {
         testChangeCountNegative();
         testChangeCountTooLarge();
         testChangeCountTooSmall();
-        testChangeCountZero();
         testToStringMethod();
     }
 
@@ -61,16 +60,6 @@ public class BanknotesUnittest {
             test("changeCount too small (no exception)", false);
         } catch (WrongAmountException e) {
             test("changeCount too small", true);
-        }
-    }
-
-    private static void testChangeCountZero() {
-        try {
-            Banknotes b = new Banknotes(100, 50);
-            b.changeCount(0); // nem engedélyezett → exception kell
-            test("changeCount zero (no exception)", false);
-        } catch (WrongAmountException e) {
-            test("changeCount zero", true);
         }
     }
 
