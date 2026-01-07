@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -10,6 +11,7 @@ public class ATMManager {
 
     private static Scanner scanner;
     private static ArrayList<Banknotes> notes = new ArrayList<>();
+    private static boolean retry = false;
 
     public static void init() {
         scanner = new Scanner(System.in);
@@ -70,12 +72,12 @@ public class ATMManager {
         try {
             Card card = checkCardNumber(scanner);
 
-            if (checkPin(card, scanner)) {
+            if (checkPin(card, scanner) || retry) {
+                retry = false;
                 System.out.println("Mennyi pénzt szeretne felvenni?");
                 int amount = scanner.nextInt();
                 scanner.nextLine(); // Fogyasztja a maradék sort
                 dispenseCash(amount);
-                welcome();
             }
         } catch (InvalidInputException iie) {
             System.out.println(iie.getMessage());
@@ -89,6 +91,11 @@ public class ATMManager {
         } catch (NumberFormatException nfe) {
             System.out.println("Csak számot adjon meg!");
             welcome();
+        } catch (InputMismatchException ime) {
+            System.out.println("Csak számot adjon meg!");
+            retry = true;
+            scanner.nextLine();
+            withdraw();
         }
     }
 
@@ -217,6 +224,8 @@ public class ATMManager {
             }
         }
         System.out.println("\n");
+
+        welcome();
     }
 
     public static void saveNotesToFile() throws InvalidInputException {
