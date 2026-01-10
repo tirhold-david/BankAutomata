@@ -1,13 +1,12 @@
 import java.util.Scanner;
 
 public class Admin implements iBankAutomata {
-    private static final Scanner scanner = ATMManager.getScanner();
 
+    private static final Scanner scanner = ATMManager.getScanner();
 
     public static void adminMode() {
         System.out.print("Admin jelszó: ");
         String password = scanner.nextLine().trim();
-
         if (PASSWORD.equals(password)) {
             System.out.println("\n✓ Sikeres admin belépés!");
             adminMenu();
@@ -18,10 +17,8 @@ public class Admin implements iBankAutomata {
 
     private static void adminMenu() {
         System.out.println("\nAdmin menü:\n1. Bankjegy készlet megtekintése\n2. Bankjegy feltöltése\n3. Kártya feloldása feketelistáról\n4. Vissza a főmenühöz");
-
         try {
             int choice = Integer.parseInt(scanner.nextLine().trim());
-
             switch (choice) {
                 case 1:
                     showStock();
@@ -70,6 +67,7 @@ public class Admin implements iBankAutomata {
                 System.out.println(wae.getMessage());
             }
         }
+
         try {
             ATMManager.saveNotesToFile();
             System.out.println("✓ Minden készlet frissítve és mentve!");
@@ -79,11 +77,9 @@ public class Admin implements iBankAutomata {
     }
 
     private static void unlockCard() {
-        System.out.print("\nFeloldani kívánt számlaszám: ");
+        System.out.print("\nFeloldani kívánt kártyaszám: ");
         String cardNumber = scanner.nextLine().trim();
-
         Card card = new Card(cardNumber);
-
         try {
             if (!cardNumber.matches("\\w{4} \\w{4} \\w{4} \\w{4}")) {
                 throw new InvalidInputException("Hibás kártyaszám formátum!");
@@ -95,11 +91,10 @@ public class Admin implements iBankAutomata {
         } catch (InvalidInputException iie) {
             System.out.println(iie.getMessage());
             adminMenu();
+            return;
         }
 
         BlackListManager.removeCard(card);
-
         System.out.println("A kártya sikeresen feloldva!");
     }
-
 }
